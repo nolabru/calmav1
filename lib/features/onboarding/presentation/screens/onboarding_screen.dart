@@ -128,11 +128,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       );
       
-      // Avançar para a próxima página
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
+      // Navegar para a tela principal (home) em vez de avançar para a próxima página
+      debugPrint('🔄 ONBOARDING: Navegando para a tela principal após salvar lembretes');
+      _completeOnboarding(); // Usar o método existente para navegar para a tela home
     } else if (mounted) {
       // Mostrar mensagem de erro
       ScaffoldMessenger.of(context).showSnackBar(

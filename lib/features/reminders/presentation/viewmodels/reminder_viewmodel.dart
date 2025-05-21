@@ -46,21 +46,26 @@ class ReminderViewModel extends ChangeNotifier {
         return;
       }
       
+      // Selecionar colunas específicas para evitar problemas de qualificação
       final response = await _client
           .from('reminders')
-          .select()
+          .select('id, user_id, time_hour, time_minute, is_active, created_at, updated_at')
           .eq('user_id', user.id)
-          .order('time');
+          .eq('is_active', true) // Apenas lembretes ativos
+          .order('time_hour') // Ordenar primeiro por hora
+          .order('time_minute'); // Depois por minuto
       
       final List<TimeOfDay> loadedReminders = [];
       
       for (final item in response as List) {
-        final timeString = item['time'] as String;
-        final parts = timeString.split(':');
+        // Usar time_hour e time_minute em vez de time
+        final int hour = item['time_hour'] as int;
+        final int minute = item['time_minute'] as int;
+        
         loadedReminders.add(
           TimeOfDay(
-            hour: int.parse(parts[0]),
-            minute: int.parse(parts[1]),
+            hour: hour,
+            minute: minute,
           ),
         );
       }
@@ -129,13 +134,12 @@ class ReminderViewModel extends ChangeNotifier {
       final List<Map<String, dynamic>> dataToInsert = [];
       
       for (final time in _reminders) {
-        final hour = time.hour.toString().padLeft(2, '0');
-        final minute = time.minute.toString().padLeft(2, '0');
-        final timeString = '$hour:$minute';
-        
+        // Usar time_hour e time_minute em vez de time
         dataToInsert.add({
-          'time': timeString,
+          'time_hour': time.hour,
+          'time_minute': time.minute,
           'user_id': user.id,
+          'is_active': true, // Definir como ativo por padrão
         });
       }
       
