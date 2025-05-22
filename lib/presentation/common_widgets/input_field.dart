@@ -171,7 +171,7 @@ class _InputFieldState extends State<InputField> {
                 !widget.enabled
                     ? AppColors.gray100
                     : _isFocused
-                    ? AppColors.calmaBlueLight.withValues(alpha: 0.2)
+                    ? AppColors.calmaBlueLight.withOpacity(0.2)
                     : AppColors.gray50,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

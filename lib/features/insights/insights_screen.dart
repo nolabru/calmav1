@@ -200,7 +200,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
+                                color: Colors.black.withOpacity(0.5),
                                 blurRadius: 10,
                                 offset: const Offset(0, -2),
                               ),
@@ -262,7 +262,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -276,7 +276,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.1),
+                  color: iconColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),

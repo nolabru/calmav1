@@ -136,7 +136,7 @@ class _AudioWaveVisualizationState extends State<AudioWaveVisualization>
               width: 3,
               height: _animations[index].value,
               decoration: BoxDecoration(
-                color: widget.color.withValues(alpha: 0.7),
+                color: widget.color.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(4),
               ),
             );
@@ -326,8 +326,8 @@ class WaveformPainter extends CustomPainter {
       // Cria um gradiente para um efeito mais delicado
       final paint =
           Paint()
-            ..color = color.withValues(
-              alpha: 0.4 * amplitude,
+            ..color = color.withOpacity(
+              0.4 * amplitude,
             ) // Opacidade reduzida
             ..style = PaintingStyle.fill
             ..strokeCap = StrokeCap.round;

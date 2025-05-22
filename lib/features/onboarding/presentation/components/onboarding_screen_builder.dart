@@ -194,7 +194,7 @@ class OnboardingScreenBuilder {
                     borderRadius: BorderRadius.circular(20.0),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
+                        color: Colors.black.withOpacity(0.03),
                         blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),
@@ -252,7 +252,7 @@ class OnboardingScreenBuilder {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.1),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -312,7 +312,7 @@ class OnboardingScreenBuilder {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Colors.black.withOpacity(0.5),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -1370,7 +1370,7 @@ class OnboardingScreenBuilder {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.1),
+                        color: Colors.red.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -1491,7 +1491,7 @@ class OnboardingScreenBuilder {
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: Colors.white.withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Row(

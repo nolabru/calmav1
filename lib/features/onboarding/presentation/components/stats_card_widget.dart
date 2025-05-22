@@ -13,7 +13,7 @@ class StatsCardWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -73,7 +73,7 @@ class StatsCardWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: 0.7,
-              backgroundColor: Colors.blue.withValues(alpha: 0.1),
+              backgroundColor: Colors.blue.withOpacity(0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(
                 Color(0xFF92CAFF),
               ),
@@ -110,8 +110,8 @@ class StatsCardWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isCompleted
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.grey.withValues(alpha: 0.1),
+                    ? Colors.green.withOpacity(0.01)
+                    : Colors.grey.withOpacity(0.01),
             shape: BoxShape.circle,
           ),
           child: Center(

@@ -361,7 +361,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: (_currentPage + 1) / _totalPages,
-              backgroundColor: Colors.grey.withValues(alpha: 0.3),
+              backgroundColor: Colors.grey.withOpacity(0.3),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
               minHeight: 6,
             ),
@@ -391,7 +391,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               foregroundColor: Colors.white,
               elevation: 0,
               // Adiciona cor de desabilitado
-              disabledBackgroundColor: Colors.grey.withValues(alpha: 0.3),
+              disabledBackgroundColor: Colors.grey.withOpacity(0.3),
               disabledForegroundColor: Colors.white70,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(26),
@@ -417,7 +417,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: double.infinity,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withOpacity(0.2),
           width: 1.0,
         ),
       ),

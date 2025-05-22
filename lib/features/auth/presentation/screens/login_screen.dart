@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> with MixinsUtils {
       height: double.infinity,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
+          color: Colors.white.withOpacity(0.2),
           width: 1.0,
         ),
       ),

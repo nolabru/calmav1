@@ -1,6 +1,3 @@
-// ===============================
-// FILE: audio_service.dart
-// ===============================
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -10,17 +7,16 @@ import 'package:permission_handler/permission_handler.dart';
 class AudioService {
   static final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   static bool _isInitialized = false;
+  static bool _isCapturing = false;
   static StreamController<Uint8List>? _streamController;
 
   static bool get isRecording => _recorder.isRecording;
 
-  /// Solicita a permissão de uso do microfone ao usuário.
   static Future<bool> solicitarPermissaoMicrofone() async {
     final status = await Permission.microphone.request();
     return status.isGranted;
   }
 
-  /// Inicializa o gravador de áudio, se necessário.
   static Future<void> _inicializarRecorder() async {
     if (!_isInitialized) {
       await _recorder.openRecorder();
@@ -28,7 +24,6 @@ class AudioService {
     }
   }
 
-  /// Inicia a captura de áudio em tempo real e envia os buffers para o callback fornecido.
   static Future<bool> iniciarCapturaDeAudio(
     void Function(Uint8List buffer) onAudioData,
   ) async {
@@ -40,17 +35,18 @@ class AudioService {
       }
 
       _streamController = StreamController<Uint8List>();
+      _isCapturing = true;
 
       await _recorder.startRecorder(
-        codec: Codec.pcm16, // formato cru PCM 16-bit
-        sampleRate: 16000, // exigido pela OpenAI
-        numChannels: 1, // mono
+        codec: Codec.pcm16,
+        sampleRate: 16000,
+        numChannels: 1,
         audioSource: AudioSource.microphone,
         toStream: _streamController!.sink,
       );
 
       _streamController!.stream.listen((buffer) {
-        if (buffer.isNotEmpty) {
+        if (_isCapturing && buffer.isNotEmpty) {
           onAudioData(buffer);
         }
       });
@@ -61,8 +57,9 @@ class AudioService {
     }
   }
 
-  /// Para a captura de áudio e libera os recursos.
   static Future<void> pararCapturaDeAudio() async {
+    _isCapturing = false;
+
     if (_recorder.isRecording) {
       await _recorder.stopRecorder();
     }

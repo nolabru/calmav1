@@ -1,7 +1,3 @@
-// ===============================
-// FILE: aia_screen.dart
-// ===============================
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:calma_flutter/features/aia/services/audio_service.dart';
 import 'package:calma_flutter/features/aia/services/openai_realtime_service.dart';
@@ -16,7 +12,7 @@ class AiaScreen extends StatefulWidget {
 class _AiaScreenState extends State<AiaScreen> {
   bool _isConnecting = true;
   bool _isListening = false;
-  String _aiResponse = '';
+  String _statusMessage = "Iniciando...";
   OpenAIRealtimeService? _openAIService;
 
   @override
@@ -32,63 +28,99 @@ class _AiaScreenState extends State<AiaScreen> {
   }
 
   Future<void> _iniciarConexao() async {
-    try {
-      final permissoesOk = await AudioService.solicitarPermissaoMicrofone();
-      if (!permissoesOk) {
-        _mostrarErro('Permissão de microfone negada.');
-        return;
-      }
-
-      _openAIService = OpenAIRealtimeService(
-        onTextResponse: (text) {
-          setState(() {
-            _aiResponse += text;
-          });
-        },
-        onAudioResponse: (audioBytes) {
-          debugPrint('[AIA] Áudio recebido (${audioBytes.length} bytes)');
-        },
-        onConversationDone: () {
-          setState(() => _isListening = false);
-        },
-      );
-
-      final conectado = await _openAIService!.iniciarConexaoComOpenAI();
-      if (!conectado) {
-        _mostrarErro('Falha ao conectar com a API da OpenAI.');
-        return;
-      }
-
-      setState(() {
-        _isConnecting = false;
-        _isListening = true;
-      });
-    } catch (e) {
-      _mostrarErro('Erro ao iniciar conexão com a AIA: $e');
+    setState(() {
+      _statusMessage = "Verificando permissões...";
+    });
+    
+    final permissoesOk = await AudioService.solicitarPermissaoMicrofone();
+    if (!permissoesOk) {
+      _mostrarErro('Permissão de microfone negada.');
+      return;
     }
+
+    setState(() {
+      _statusMessage = "Conectando à OpenAI...";
+    });
+
+    _openAIService = OpenAIRealtimeService(
+      onAudioResponse: (audioData) {
+        debugPrint('[AIA] 🎧 Áudio reproduzido (${audioData.length} bytes)');
+        setState(() {
+          _statusMessage = "Ouvindo resposta da IA...";
+        });
+      },
+      onConversationDone: () {
+        setState(() {
+          _isListening = false;
+          _statusMessage = "Conversa finalizada";
+        });
+      },
+    );
+
+    final conectado = await _openAIService!.iniciarConexaoComOpenAI();
+    if (!conectado) {
+      _mostrarErro('Falha ao conectar com a API da OpenAI. Verifique sua conexão com a internet e tente novamente.');
+      return;
+    }
+
+    setState(() {
+      _isConnecting = false;
+      _isListening = true;
+      _statusMessage = "AIA está ouvindo...";
+    });
   }
 
   void _encerrarConversa() {
     _openAIService?.encerrarConversa();
     _openAIService = null;
-    setState(() => _isListening = false);
+    if (mounted) {
+      setState(() {
+        _isListening = false;
+        _statusMessage = "Conversa encerrada";
+      });
+    }
   }
 
   void _mostrarErro(String mensagem) {
     debugPrint('[AIA] Erro: $mensagem');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensagem), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(mensagem),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Tentar Novamente',
+          textColor: Colors.white,
+          onPressed: () {
+            _iniciarConexao();
+          },
+        ),
+      ),
     );
-    setState(() => _isConnecting = false);
+    if (mounted) {
+      setState(() {
+        _isListening = false;
+        _isConnecting = false;
+        _statusMessage = "Erro de conexão";
+      });
+    }
   }
 
   void _alternarEscuta() {
     if (_isListening) {
+      setState(() {
+        _statusMessage = "Encerrando conversa...";
+      });
       _encerrarConversa();
     } else {
+      setState(() {
+        _isConnecting = true;
+        _statusMessage = "Iniciando conexão...";
+      });
       _iniciarConexao();
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +137,18 @@ class _AiaScreenState extends State<AiaScreen> {
           },
         ),
         title: const Text(
-          'AIA',
+          'AIA - Assistente de Voz',
           style: TextStyle(color: Color(0xFF333333), fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
+        actions: [
+          // Botão para reconectar
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.black54),
+            onPressed: _isConnecting ? null : _iniciarConexao,
+            tooltip: 'Reconectar',
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -117,64 +157,31 @@ class _AiaScreenState extends State<AiaScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Center(
-                  child: _isConnecting
-                      ? const _ConectandoWidget()
-                      : _RespostaWidget(texto: _aiResponse),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isConnecting)
+                        const CircularProgressIndicator(color: Color(0xFF9D82FF)),
+                      const SizedBox(height: 16),
+                      Text(
+                        _statusMessage,
+                        style: const TextStyle(fontSize: 16, color: Color(0xFF333333)),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      if (_isListening && !_isConnecting)
+                        const Text(
+                          'Fale algo para conversar com a IA...',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
             _BotaoMicrofone(ativo: _isListening, onPressed: _alternarEscuta),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ============================
-// Widgets auxiliares
-// ============================
-
-class _ConectandoWidget extends StatelessWidget {
-  const _ConectandoWidget();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset('assets/images/1813edc8-2cfd-4f21-928d-16663b4fe844.png', width: 180),
-        const SizedBox(height: 24),
-        const CircularProgressIndicator(color: Color(0xFF9D82FF)),
-        const SizedBox(height: 16),
-        const Text('Conectando com a AIA...', style: TextStyle(fontSize: 16, color: Color(0xFF9D82FF))),
-      ],
-    );
-  }
-}
-
-class _RespostaWidget extends StatelessWidget {
-  final String texto;
-
-  const _RespostaWidget({required this.texto});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Text(
-        texto.isEmpty ? 'Estou ouvindo...' : texto,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 16,
-          fontStyle: texto.isEmpty ? FontStyle.italic : FontStyle.normal,
         ),
       ),
     );

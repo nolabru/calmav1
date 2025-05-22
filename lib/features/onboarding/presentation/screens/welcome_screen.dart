@@ -76,7 +76,7 @@ class WelcomeScreen extends StatelessWidget {
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                color: AppColors.calmaBlue.withValues(alpha: 0.2),
+                color: AppColors.calmaBlue.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(100),
               ),
             ).animate().blurXY(
@@ -90,7 +90,7 @@ class WelcomeScreen extends StatelessWidget {
                 width: 150,
                 height: 150,
                 decoration: BoxDecoration(
-                  color: AppColors.calmaBlueDark.withValues(alpha: 0.1),
+                  color: AppColors.calmaBlueDark.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(100),
                 ),
               ).animate().blurXY(
@@ -113,7 +113,7 @@ class WelcomeScreen extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: AppColors.calmaBlueDark.withValues(alpha: 0.2),
+              color: AppColors.calmaBlueDark.withOpacity(0.2),
               width: 1.0,
             ),
           ),
@@ -147,7 +147,7 @@ class WelcomeScreen extends StatelessWidget {
                         width: 200,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.calmaBlue.withValues(alpha: 0.8),
+                          color: AppColors.calmaBlue.withOpacity(0.8),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         alignment: Alignment.center,
@@ -198,7 +198,7 @@ class WelcomeScreen extends StatelessWidget {
               PrimaryButton(
                 text: "Começar",
                 onPressed: onGetStarted,
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                backgroundColor: Colors.white.withOpacity(0.2),
                 textColor: AppColors.gray700,
                 height: 52,
                 borderRadius: 50,
@@ -225,7 +225,7 @@ class WelcomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.gray600.withValues(alpha: 0.9),
+                      color: AppColors.gray600.withOpacity(0.9),
                     ),
                     children: [
                       const TextSpan(

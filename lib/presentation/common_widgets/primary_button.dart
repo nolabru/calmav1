@@ -74,7 +74,7 @@ class PrimaryButton extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isDisabled
-                    ? effectiveBackgroundColor.withValues(alpha: 0.6)
+                    ? effectiveBackgroundColor.withOpacity(0.2)
                     : effectiveBackgroundColor,
             borderRadius: BorderRadius.circular(borderRadius),
           ),
