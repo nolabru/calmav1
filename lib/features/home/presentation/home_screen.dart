@@ -1,3 +1,6 @@
+// ===============================
+// FILE: home_screen.dart
+// ===============================
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -36,18 +39,16 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leadingWidth: 100, // aumenta a largura para caber o texto
+        leadingWidth: 100,
         leading: InkWell(
           borderRadius: BorderRadius.circular(24),
-          onTap: () {
-            context.goNamed('welcome');
-          },
+          onTap: () => context.goNamed('welcome'),
           child: Row(
-            children: [
-              const SizedBox(width: 8),
-              const Icon(Icons.arrow_back, color: Colors.black54),
-              const SizedBox(width: 4),
-              const Text(
+            children: const [
+              SizedBox(width: 8),
+              Icon(Icons.arrow_back, color: Colors.black54),
+              SizedBox(width: 4),
+              Text(
                 'Voltar',
                 style: TextStyle(
                   color: Colors.black54,
@@ -61,17 +62,14 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Colors.black54),
-            onPressed: () {
-              context.pushNamed('insights');
-            },
+            onPressed: () => context.pushNamed('insights'),
           ),
         ],
       ),
-      // ...restante do código...
       body: SafeArea(
         child: Container(
           padding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Color(0xFFF5EFFD),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(24),
@@ -81,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Linha com data e foguinho
+              // Header com data e ícone de fogo
               Row(
                 children: [
                   Text(
@@ -93,11 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const Icon(
-                    Icons.local_fire_department,
-                    color: Colors.orange,
-                    size: 20,
-                  ),
+                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 20),
                   const SizedBox(width: 4),
                   const Text(
                     "0",
@@ -110,16 +104,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              // Container arredondado com a frase
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 child: const Text(
                   'A AIA foi programada especificamente pra você',
                   style: TextStyle(color: Color(0xFF22223B), fontSize: 14),
@@ -127,12 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Área principal com elemento visual e chamada para ação
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    context.pushNamed('aia');
-                  },
+                  onTap: () => context.pushNamed('aia'),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -156,14 +143,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // Botão de ajuste de preferências na parte inferior
               Padding(
                 padding: const EdgeInsets.only(bottom: 24.0),
                 child: Center(
                   child: TextButton(
-                    onPressed: () {
-                      context.pushNamed('insights');
-                    },
+                    onPressed: () => context.pushNamed('insights'),
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.black54,
                     ),
