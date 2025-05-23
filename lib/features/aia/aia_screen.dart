@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:calma_flutter/features/aia/services/audio_service.dart';
 import 'package:calma_flutter/features/aia/services/openai_realtime_service.dart';
 
@@ -9,11 +10,15 @@ class AiaScreen extends StatefulWidget {
   State<AiaScreen> createState() => _AiaScreenState();
 }
 
-class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMixin {
+class _AiaScreenState extends State<AiaScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _animation;
+  late Animation<Offset> _slideAnimation;
+  
+  // Imagem para usar na animação
+  final String _imageAsset = 'assets/images/ba4aa252-6ce8-4eed-a0e1-9b5265138a7a.png';
   bool _isConnecting = true;
   bool _isListening = false;
+  bool _isMuted = false; // Variável para controlar se o áudio está mudo
   String _statusMessage = "Iniciando...";
   OpenAIRealtimeService? _openAIService;
 
@@ -21,18 +26,24 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
 
+    // Controlador para a animação de movimento vertical
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 4000),
     );
 
-    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
+    // Animação de deslizamento suave para cima e para baixo
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.03),  // Começa um pouco abaixo
+      end: const Offset(0, -0.03),   // Termina um pouco acima
+    ).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOut,
       ),
     );
 
+    // Iniciar a animação com repetição contínua
     _animationController.repeat(reverse: true);
 
     _iniciarConexao();
@@ -58,7 +69,7 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
     }
     
     setState(() {
-      _statusMessage = "Conectando à OpenAI...";
+      _statusMessage = "Respire... Você chegou.";
     });
 
     // Criar serviço com callbacks
@@ -74,22 +85,26 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
           _animationController.stop();
         }
       },
-      onConversationDone: () {
-        debugPrint('[AIA Screen] Conversa finalizada');
-        setState(() {
-          _isListening = false;
-          _statusMessage = "Conversa finalizada";
-        });
-        
-        // Parar a animação quando a conversa terminar
-        if (_animationController.isAnimating) {
-          _animationController.stop();
+  onConversationDone: () {
+        debugPrint('[AIA Screen] Resposta recebida');
+        // Reiniciar a conexão automaticamente para manter a conversa contínua
+        if (_openAIService != null && !_openAIService!.isConnected) {
+          _iniciarConexao();
+        } else {
+          setState(() {
+            _statusMessage = "Estou ouvindo...";
+          });
+          
+          // Reiniciar a animação para indicar que está ouvindo novamente
+          if (!_animationController.isAnimating) {
+            _animationController.repeat(reverse: true);
+          }
         }
       },
       onListeningStarted: () {
         debugPrint('[AIA Screen] Começando a ouvir');
         setState(() {
-          _statusMessage = "AIA está ouvindo...";
+          _statusMessage = "Estou ouvindo...";
         });
         
         // Iniciar a animação quando começar a ouvir
@@ -110,7 +125,7 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
       setState(() {
         _isConnecting = false;
         _isListening = true;
-        _statusMessage = "AIA está ouvindo...";
+        _statusMessage = "Estou ouvindo...";
       });
     } catch (e) {
       _mostrarErro('Erro ao iniciar conexão: $e');
@@ -193,6 +208,23 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
       await _iniciarConexao();
     }
   }
+  
+  // Método para alternar entre mudo e não mudo
+  void _alternarMudo() {
+    setState(() {
+      _isMuted = !_isMuted;
+      
+      if (_isMuted) {
+        // Implementar lógica para mutar o áudio
+        AudioService.muteAudio();
+        _statusMessage = "Áudio mutado";
+      } else {
+        // Implementar lógica para desmutar o áudio
+        AudioService.unmuteAudio();
+        _statusMessage = "Estou ouvindo...";
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,10 +239,6 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
             _encerrarConversa();
             Navigator.of(context).pop();
           },
-        ),
-        title: const Text(
-          'AIA - Assistente de Voz',
-          style: TextStyle(color: Color(0xFF333333), fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         actions: [
@@ -232,13 +260,33 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildStatusIndicator(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+                      // Botão de mudo
+                      if (_isListening && !_isConnecting)
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              _isMuted ? Icons.volume_off : Icons.volume_up,
+                              color: _isMuted ? Colors.red : Colors.grey,
+                              size: 20,
+                            ),
+                            onPressed: _alternarMudo,
+                          ),
+                        ),
+                      const SizedBox(height: 20),
                       Text(
                         _statusMessage,
-                        style: const TextStyle(fontSize: 16, color: Color(0xFF333333), fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontSize: 14, color: Color(0xFF9333EA), fontWeight: FontWeight.w400),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
                       if (_isListening && !_isConnecting)
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -247,7 +295,7 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
-                            'Fale algo para conversar com a IA...',
+                            'Fale algo para conversar com a AIA...',
                             style: TextStyle(fontSize: 14, color: Color(0xFF6B6B6B)),
                             textAlign: TextAlign.center,
                           ),
@@ -257,7 +305,6 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
                 ),
               ),
             ),
-            _BotaoMicrofone(ativo: _isListening, onPressed: _alternarEscuta),
           ],
         ),
       ),
@@ -278,21 +325,18 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        return Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.transparent,
-            border: Border.all(color: const Color(0xFF9D82FF), width: 2),
-          ),
-          child: Center(
-            child: Container(
-              width: 30 * _animation.value,
-              height: 30 * _animation.value,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF9D82FF).withOpacity(0.5),
+        return SlideTransition(
+          position: _slideAnimation,
+          child: Container(
+            width: 400, 
+            height: 400, 
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                _imageAsset,
+                fit: BoxFit.contain,
               ),
             ),
           ),
@@ -302,39 +346,4 @@ class _AiaScreenState extends State<AiaScreen> with SingleTickerProviderStateMix
   }
 }
 
-class _BotaoMicrofone extends StatelessWidget {
-  final bool ativo;
-  final VoidCallback onPressed;
-
-  const _BotaoMicrofone({required this.ativo, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: ativo ? const Color(0xFF9D82FF) : Colors.grey[200],
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(
-            ativo ? Icons.mic : Icons.mic_none,
-            color: ativo ? Colors.white : Colors.black38,
-            size: 32,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Classe _BotaoMicrofone removida para manter a conversa contínua

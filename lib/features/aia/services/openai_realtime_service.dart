@@ -188,23 +188,39 @@ class OpenAIRealtimeService {
       // Verificar se a resposta começa com "v=0", que é o início de um SDP válido
       if (responseBody.trim().startsWith('v=0')) {
         debugPrint('[AIA] Resposta SDP recebida com sucesso');
-      } else if (response.statusCode != 200) {
+      } else {
         // Verificar se a resposta é um JSON de erro
         try {
-          final errorJson = jsonDecode(responseBody);
-          if (errorJson.containsKey('error')) {
-            debugPrint('[AIA] Erro da API OpenAI: ${errorJson['error']}');
+          if (response.statusCode != 200) {
+            debugPrint('[AIA] Erro HTTP: ${response.statusCode}');
+            try {
+              final errorJson = jsonDecode(responseBody);
+              if (errorJson.containsKey('error')) {
+                if (errorJson['error'] is Map) {
+                  debugPrint('[AIA] Erro da API OpenAI: ${errorJson['error']['message']}');
+                } else {
+                  debugPrint('[AIA] Erro da API OpenAI: ${errorJson['error']}');
+                }
+              } else {
+                debugPrint('[AIA] Erro ao obter SDP da OpenAI: $responseBody');
+              }
+            } catch (e) {
+              // Se não for JSON, apenas exibir a resposta como está
+              debugPrint('[AIA] Erro ao obter SDP da OpenAI: $responseBody');
+            }
           } else {
-            debugPrint('[AIA] Erro ao obter SDP da OpenAI: $responseBody');
+            debugPrint('[AIA] Resposta inesperada da API: $responseBody');
           }
         } catch (e) {
-          // Se não for JSON, apenas exibir a resposta como está
-          debugPrint('[AIA] Erro ao obter SDP da OpenAI: $responseBody');
+          debugPrint('[AIA] Erro ao processar resposta: $e');
         }
-        return false;
-      } else {
-        debugPrint('[AIA] Resposta inesperada da API: $responseBody');
-        return false;
+        
+        // Aguardar um pouco antes de tentar novamente
+        await Future.delayed(Duration(seconds: 2));
+        
+        // Tentar novamente uma vez
+        debugPrint('[AIA] Tentando reconectar após erro...');
+        return await _tentarReconectar();
       }
       
       try {
@@ -250,6 +266,13 @@ class OpenAIRealtimeService {
           
         case 'error':
           // Verificar se o erro tem uma mensagem
+          if (data.containsKey('error') && data['error'] is Map && data['error'].containsKey('message')) {
+            debugPrint('[AIA] Erro recebido: ${data['error']['message']}');
+          } else if (data.containsKey('message')) {
+            debugPrint('[AIA] Erro recebido: ${data['message']}');
+          } else {
+            debugPrint('[AIA] Erro recebido sem mensagem detalhada');
+          }
           break;
           
         // Ignorando eventos relacionados a texto, já que só queremos áudio
@@ -281,20 +304,19 @@ class OpenAIRealtimeService {
       final settings = {
         "type": "session.update",
         "session": {
-          "modalities": ["audio", "text"], // A API exige "text" mesmo que só queiramos áudio
-          "voice": "shimmer", // Voz mais natural e feminina
+          "modalities": ["audio", "text"],
+          "voice": "alloy", 
           "output_audio_format": "pcm16",
-          // Removido o parâmetro speed que não está disponível na chave de API
           "input_audio_transcription": {"model": "whisper-1"},
           "turn_detection": {
             "type": "server_vad",
-            "threshold": 0.6, // Menos sensível para não detectar ruídos como fala
-            "silence_duration_ms": 2000, // 2 segundos de silêncio antes de considerar que o usuário terminou
+            "threshold": 0.7, 
+            "silence_duration_ms": 1000, // 5 segundos de silêncio antes de considerar que o usuário terminou
             "prefix_padding_ms": 300
           },
           "temperature": 0.7,
           "max_response_output_tokens": "inf",
-          "instructions": "Você é uma IA simpática e útil que responde em português do Brasil."
+          "instructions": "Você é uma IA que se chama 'ÁIA' e inicialmente você pergunta o nome do usuário."
         }
       };
       
@@ -303,6 +325,53 @@ class OpenAIRealtimeService {
       _dataChannel!.send(RTCDataChannelMessage(jsonString));
     } else {
       debugPrint("[AIA] Canal de dados não está pronto para enviar configuração. Estado: ${_dataChannel?.state}");
+    }
+  }
+
+  Future<bool> _tentarReconectar() async {
+    try {
+      debugPrint('[AIA] Tentando reconectar...');
+      
+      // Criar nova oferta SDP
+      final offerOptions = <String, dynamic>{
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': false,
+        'voiceActivityDetection': true,
+      };
+      
+      final offer = await _peerConnection!.createOffer(offerOptions);
+      await _peerConnection!.setLocalDescription(offer);
+      
+      debugPrint('[AIA] Nova oferta SDP criada para reconexão');
+
+      // Enviar oferta para a OpenAI
+      final client = HttpClient();
+      final uri = Uri.parse("https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17");
+      final request = await client.postUrl(uri);
+      
+      request.headers.set('Authorization', 'Bearer ${dotenv.env['OPENAI_API_KEY']}');
+      request.headers.set('Content-Type', 'application/sdp');
+      
+      request.write(offer.sdp);
+      
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+      
+      if (responseBody.trim().startsWith('v=0')) {
+        debugPrint('[AIA] Reconexão bem-sucedida');
+        
+        await _peerConnection!.setRemoteDescription(
+          RTCSessionDescription(responseBody, 'answer'),
+        );
+        
+        return true;
+      } else {
+        debugPrint('[AIA] Falha na reconexão: resposta inválida');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[AIA] Erro durante a reconexão: $e');
+      return false;
     }
   }
 

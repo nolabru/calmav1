@@ -103,4 +103,20 @@ class AudioService {
 
   static MediaStreamTrack? getAudioTrack() => _audioTrack;
   static MediaStream? getMediaStream() => _localStream;
+  
+  // Método para mutar o áudio
+  static void muteAudio() {
+    if (_audioTrack != null) {
+      debugPrint('[AudioService] Mutando áudio');
+      _audioTrack!.enabled = false;
+    }
+  }
+  
+  // Método para desmutar o áudio
+  static void unmuteAudio() {
+    if (_audioTrack != null) {
+      debugPrint('[AudioService] Desmutando áudio');
+      _audioTrack!.enabled = true;
+    }
+  }
 }

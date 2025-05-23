@@ -1,7 +1,5 @@
 name: calma_flutter
-
 description: "Aplicativo C'Alma para bem-estar mental e emocional"
-
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -77,6 +75,8 @@ dev_dependencies:
   json_serializable: ^6.7.1
   injectable_generator: ^2.4.1
   flutter_gen_runner: ^5.4.0
+
+  # App Icon & Splash Screen
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.3.12
 
@@ -95,3 +95,17 @@ flutter:
     - .env
     - assets/images/
     - assets/icons/
+
+flutter_launcher_icons:  # <-- Atualizado aqui
+  android: true
+  ios: true
+  image_path: "assets/images/icon.png"
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/splash-screen.png
+  android: true
+  ios: true
+  fullscreen: true
+
